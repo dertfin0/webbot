@@ -69,7 +69,7 @@ bot = WebBot("http://адрес_вашего_сервера:8000", "пароль
 # Создаём обработчик сообщений
 @bot.message_handler()
 def echo(message):
-    bot.send_message(message["content"]) # Отправляем ответ - сообщение с тем же текстом, который отправил пользователь
+    bot.send_message(message.text) # Отправляем ответ - сообщение с тем же текстом, который отправил пользователь
 
 bot.infinity_polling() # Запускаем бота
 ```
@@ -82,14 +82,14 @@ bot = WebBot("http://адрес_вашего_сервера:8000", "пароль
 
 @bot.message_handler()
 def start(message):
-    if message["content"] != "/start":
+    if message.text != "/start":
         return
     bot.send_message("Hello world!")
 
 # Можно сделать удаленное выключение своего компьютера
 @bot.message_handler()
 def shutdown(message):
-    if message["content"] != "/shutdown":
+    if message.text != "/shutdown":
         return
     os.system("shutdown -s -t 0")
 
@@ -102,14 +102,14 @@ bot = WebBot("http://адрес_вашего_сервера:8000", "пароль
 
 @bot.message_handler()
 def hello(message):
-    if message["content"] != "/hello":
+    if message.text != "/hello":
         return
     bot.send_message("Как тебя зовут?")
     bot.register_next_step_handler(handle_hello) 
     # Следующее сообщение получит только handle_hello
 
 def handle_hello(message):
-    name = message["content"]
+    name = message.text
     bot.send_message("Привет, " + name + "!")
 ```
 

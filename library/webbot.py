@@ -6,6 +6,17 @@ from typing import Callable
 import requests
 from requests import Timeout, RequestException
 
+class Message:
+    id: int
+    text: str
+    sent_at: int
+
+    def __init__(self, id: int, text: str, sent_at: int):
+        self.id = id
+        self.text = text
+        self.sent_at = sent_at
+
+
 class WebBot:
     def __init__(self, server_url, token, logger: logging.Logger = None, **kwargs):
         self.server_url = server_url
@@ -69,6 +80,8 @@ class WebBot:
             return
 
         for message in res.json():
+            message = Message(message["id"], message["content"], message["sent_at"])
+
             if self.next_step_handler is not None:
                 self.next_step_handler(message)
                 self.next_step_handler = None
@@ -76,7 +89,7 @@ class WebBot:
 
             for handler in self.handlers:
                 handler(message)
-            self._mark_as_handled(message["id"])
+            self._mark_as_handled(message.id)
 
     def send_message(self, text):
         if len(text) > 2048:
