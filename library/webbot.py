@@ -1,6 +1,8 @@
 import hashlib
 import logging
 import time
+from typing import Callable
+
 import requests
 from requests import Timeout, RequestException
 
@@ -24,6 +26,8 @@ class WebBot:
             self.cooldown = kwargs["cooldown"]
         else:
             self.cooldown = 1
+
+        self.next_step_handler = None
 
         # TODO: Token validation
         # TODO: Version warnings
@@ -65,6 +69,11 @@ class WebBot:
             return
 
         for message in res.json():
+            if self.next_step_handler is not None:
+                self.next_step_handler(message)
+                self.next_step_handler = None
+                continue
+
             for handler in self.handlers:
                 handler(message)
             self._mark_as_handled(message["id"])
@@ -87,6 +96,13 @@ class WebBot:
         except RequestException as e:
             self.logger.warning(f"API returned non-200 status code: {e}")
             return
+
+    def register_next_step_handler(self, handler: Callable):
+        """
+        Register the only handler that will be called for next message
+        :param handler: Function(message)
+        """
+        self.next_step_handler = handler
 
     def infinity_polling(self):
         while True:
