@@ -88,8 +88,15 @@ if __name__ == "__main__":
     print("Connecting to the server...")
     try:
         with httpx.Client(timeout=10) as client:
-            res = client.get(server_address + "/version")
+            res = client.get(server_address + "/auth/validate-user-password", params={
+                "password_hash" : password_hash
+            })
             res.raise_for_status()
+
+            if not res.json()["valid"]:
+                print("Password check failed")
+                exit(0)
+
     except httpx.ConnectTimeout:
         print("Can't connect to the server: Timeout")
         exit(-1)

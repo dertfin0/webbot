@@ -40,10 +40,23 @@ class WebBot:
 
         self.next_step_handler = None
 
-        # TODO: Token validation
+        try:
+            res = requests.get(self.server_url + "/auth/validate-token", params={
+                "token_hash": self.token_hash,
+            }, timeout=self.timeout)
+            res.raise_for_status()
+
+            if not res.json()["valid"]:
+                self.logger.error("Token validation failed")
+                exit(0)
+        except Timeout:
+            self.logger.error("Can't connect to the server: Timeout")
+            return
+        except RequestException as e:
+            self.logger.warning(f"API returned non-200 status code: {e}")
+            return
+
         # TODO: Version warnings
-        # TODO: Message object
-        # TODO: add WebBot#register_next_step_handler
 
     def message_handler(self):
         def wrapper(func):
