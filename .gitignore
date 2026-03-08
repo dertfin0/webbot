@@ -1,0 +1,10 @@
+.idea
+*/build
+*/dist
+*.db
+*/test
+__pycache__
+*/__pycache
+*.pyc
+.env
+*/.env
