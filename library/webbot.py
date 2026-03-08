@@ -25,6 +25,11 @@ class WebBot:
         else:
             self.cooldown = 1
 
+        # TODO: Token validation
+        # TODO: Version warnings
+        # TODO: Message object
+        # TODO: add WebBot#register_next_step_handler
+
     def message_handler(self):
         def wrapper(func):
             self.handlers.append(func)
