@@ -3,12 +3,13 @@ import uvicorn
 import asyncio
 
 from common import database
-from routers import user_api
+from routers import user_api, bot_api
 
 app = FastAPI()
 VERSION = "0.1.0"
 
 app.include_router(user_api.router)
+app.include_router(bot_api.router)
 
 @app.get("/version", summary="Get version of WebBot API")
 async def version():

@@ -1,5 +1,5 @@
 from common.database import Base, db
-from sqlalchemy import BIGINT, VARCHAR, BOOLEAN, INTEGER, select
+from sqlalchemy import BIGINT, VARCHAR, BOOLEAN, INTEGER, select, update
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -24,3 +24,17 @@ async def get_messages_from_id(last_received_id: int) -> list:
         query = select(Message).where(Message.id > last_received_id)
         result = await session.execute(query)
         return result.scalars().all()
+
+async def get_not_handled_messages() -> list:
+    async with db.Session() as session:
+        query = select(Message).where(Message.handled != True)
+        result = await session.execute(query)
+        return result.scalars().all()
+
+async def mark_as_handled(message_id: int):
+    async with db.Session() as session:
+        query = update(Message).where(Message.id == message_id).values(handled=True)
+        result = await session.execute(query)
+        await session.commit()
+
+        return result.rowcount == 1

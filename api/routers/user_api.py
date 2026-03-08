@@ -2,7 +2,7 @@ from fastapi import APIRouter
 import time
 
 from common import messages
-from schemas import UserMessageSendBody
+from schemas import MessageSendBody
 
 router = APIRouter(
     prefix="/user",
@@ -12,7 +12,7 @@ router = APIRouter(
 # TODO: User auth by password from .env
 
 @router.post("/message", summary="Send new message")
-async def send_message(body: UserMessageSendBody):
+async def send_message(body: MessageSendBody):
     return await messages.save_message(messages.Message(
         content=body.content,
         by_bot=False,
