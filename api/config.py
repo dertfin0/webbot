@@ -12,8 +12,15 @@ def load():
     global user_password
     global user_password_hash
 
+    if not dotenv.load_dotenv(".env"):
+        raise ValueError(".env file not found")
+
     bot_token = dotenv.get_key(".env", "BOT_TOKEN")
+    if not bot_token:
+        raise ValueError("BOT_TOKEN not set")
     bot_token_hash = hashlib.sha256(bot_token.encode("UTF-8")).hexdigest()
 
     user_password = dotenv.get_key(".env", "USER_PASSWORD")
+    if not user_password:
+        raise ValueError("USER_PASSWORD not set")
     user_password_hash = hashlib.sha256(user_password.encode("UTF-8")).hexdigest()
