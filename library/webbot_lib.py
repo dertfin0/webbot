@@ -19,7 +19,7 @@ class Message:
 
 class WebBot:
 
-    VERSION = "0.1.0"
+    VERSION = "0.1.1"
 
     def __init__(self, server_url, token, logger: logging.Logger = None, **kwargs):
         self.server_url = server_url

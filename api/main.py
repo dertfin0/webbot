@@ -1,14 +1,13 @@
 from fastapi import FastAPI
 import uvicorn
 import asyncio
-import dotenv
 
 import config
 from common import database
 from routers import user_api, bot_api, auth_api
 
 app = FastAPI()
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 app.include_router(user_api.router)
 app.include_router(bot_api.router)

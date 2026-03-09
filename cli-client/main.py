@@ -9,7 +9,7 @@ from textual.app import App
 from textual import events
 from textual.widgets import Header, RichLog, Input
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 parser = argparse.ArgumentParser(prog="WebBot Client")
 parser.add_argument("config", help="Path to config file")
