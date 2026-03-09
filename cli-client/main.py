@@ -8,12 +8,15 @@ from textual.app import App
 from textual import events
 from textual.widgets import Header, RichLog, Input
 
+VERSION = "0.1.0"
+
 parser = argparse.ArgumentParser(prog="WebBot Client")
 parser.add_argument("config", help="Path to config file")
 
 server_address: str
 password: str
 password_hash: str
+
 
 class Client(App):
     last_received_id = 0
@@ -27,7 +30,7 @@ class Client(App):
 
     def on_mount(self):
         self.title = "WebBot Client"
-        self.input.focus() # Required to run over SSH
+        self.input.focus()  # Required to run over SSH
         self.richlog.styles.padding = (1, 3, 1, 3)
         self.run_worker(self.message_update_worker())
 
@@ -38,14 +41,14 @@ class Client(App):
         async with httpx.AsyncClient() as client:
             await client.post(server_address + "/user/message", headers={
                 "Authorization": password_hash
-            }, json = {
+            }, json={
                 "content": self.input.value.strip()
             })
             self.input.value = ""
 
     async def get_new_messages(self):
         async with httpx.AsyncClient() as client:
-            res = await client.get(server_address + "/user/messages", params= {
+            res = await client.get(server_address + "/user/messages", params={
                 "last_received_id": self.last_received_id
             }, headers={
                 "Authorization": password_hash
@@ -74,6 +77,7 @@ class Client(App):
         sender = "Bot" if by_bot else "You"
         self.richlog.write(f"[[{color}]{sender}[/{color}]] [white]{content}[/white]")
 
+
 if __name__ == "__main__":
     args = parser.parse_args()
     if not args.config:
@@ -88,15 +92,39 @@ if __name__ == "__main__":
     print("Connecting to the server...")
     try:
         with httpx.Client(timeout=10) as client:
+            res = client.get(server_address + "/version")
+            res.raise_for_status()
+
+            client = VERSION.split(".")
+            api = res.json().split(".")
+
+            if api[0] > client[0]:
+                print(f"Client is too outdated. Update client to version {res.json()} and try again")
+                exit(-1)
+            elif api[0] < client[0]:
+                print(f"API version is too outdated. Update API and run again")
+                exit(-1)
+            elif api[1] > client[1]:
+                print(f"Client version is outdated. Some features may not be available. Update it and run again")
+            elif api[2] > client[2]:
+                print(f"Client version is outdated. Some bugfix may not be available. Update it and run again")
+    except httpx.ConnectTimeout:
+        print("Can't connect to the server: Timeout")
+        exit(-1)
+    except httpx.ConnectError:
+        print("Can't connect to the server: Connection refused")
+        exit(-1)
+
+    try:
+        with httpx.Client(timeout=10) as client:
             res = client.get(server_address + "/auth/validate-user-password", params={
-                "password_hash" : password_hash
+                "password_hash": password_hash
             })
             res.raise_for_status()
 
             if not res.json()["valid"]:
                 print("Password check failed")
                 exit(0)
-
     except httpx.ConnectTimeout:
         print("Can't connect to the server: Timeout")
         exit(-1)
