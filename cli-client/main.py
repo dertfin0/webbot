@@ -112,6 +112,14 @@ if __name__ == "__main__":
     else:
         server_address = dotenv.get_key(args.config, "SERVER_ADDRESS")
         password = dotenv.get_key(args.config, "PASSWORD")
+
+    if not server_address:
+        print("Key SERVER_ADDRESS not set")
+        exit(-1)
+    if not password:
+        print("Key PASSWORD not set")
+        exit(-1)
+
     password_hash = hashlib.sha256(password.encode()).hexdigest()
 
     print("Connecting to the server...")
@@ -136,7 +144,7 @@ if __name__ == "__main__":
     except httpx.ConnectTimeout:
         print("Can't connect to the server: Timeout")
         exit(-1)
-    except httpx.ConnectError:
+    except Exception:
         print("Can't connect to the server: Connection refused")
         exit(-1)
 
@@ -153,7 +161,7 @@ if __name__ == "__main__":
     except httpx.ConnectTimeout:
         print("Can't connect to the server: Timeout")
         exit(-1)
-    except httpx.ConnectError:
+    except Exception:
         print("Can't connect to the server: Connection refused")
         exit(-1)
 
