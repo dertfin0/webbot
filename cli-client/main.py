@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import httpx
 import asyncio
+from datetime import datetime
 
 from textual.app import App
 from textual import events
@@ -20,6 +21,7 @@ password_hash: str
 
 class Client(App):
     last_received_id = 0
+    last_received_date = (0, 0, 0)
 
     def compose(self):
         yield Header()
@@ -60,7 +62,7 @@ class Client(App):
 
             self.last_received_id = res.json()[-1]["id"]
             for message in res.json():
-                self.add_new_message(message["content"], message["by_bot"])
+                self.add_new_message(message["content"], message["by_bot"], message["sent_at"])
 
     async def message_update_worker(self):
         while True:
@@ -71,12 +73,35 @@ class Client(App):
 
             await asyncio.sleep(1)
 
-    def add_new_message(self, content: str, by_bot: bool):
+    def add_new_message(self, content: str, by_bot: bool, sent_at: int):
         # TODO: Add timestamps
+        date = datetime.fromtimestamp(sent_at)
+        hour = date.time().hour if date.time().hour >= 10 else "0" + str(date.time().hour)
+        minute = date.time().minute if date.time().minute >= 10 else "0" + str(date.time().minute)
+
+        day = date.date().day
+        month = date.date().month
+        year = date.date().year
+
+        if year > self.last_received_date[2]:
+            self.print_date(day, month, year)
+        elif month > self.last_received_date[1]:
+            self.print_date(day, month, year)
+        elif day > self.last_received_date[0]:
+            self.print_date(day, month, year)
+
+        self.last_received_date = (day, month, year)
+
+        date_prefix = f"{hour}:{minute}"
         color = "green" if by_bot else "cyan"
         sender = "Bot" if by_bot else "You"
-        self.richlog.write(f"[[{color}]{sender}[/{color}]] [white]{content}[/white]")
+        self.richlog.write(f"[[green]{date_prefix}[/green]] [[{color}]{sender}[/{color}]] [white]{content}[/white]")
 
+    def print_date(self, day, month, year):
+        day = str(day) if day >= 10 else "0" + str(day)
+        month = str(month) if month >= 10 else "0" + str(month)
+        year = str(year)
+        self.richlog.write(f"\n[gray][bold]{day}.{month}.{year}[/bold][/gray]\n")
 
 if __name__ == "__main__":
     args = parser.parse_args()
