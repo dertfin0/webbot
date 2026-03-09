@@ -18,6 +18,9 @@ class Message:
 
 
 class WebBot:
+
+    VERSION = "0.1.0"
+
     def __init__(self, server_url, token, logger: logging.Logger = None, **kwargs):
         self.server_url = server_url
         self.token = token
@@ -30,16 +33,44 @@ class WebBot:
 
         if "timeout" in kwargs:
             self.timeout = kwargs["timeout"]
+            logger.debug("Setting timeout to {}s".format(self.timeout))
         else:
             self.timeout = 5
 
         if "cooldown" in kwargs:
             self.cooldown = kwargs["cooldown"]
+            logger.debug("Setting cooldown to {}s".format(self.cooldown))
         else:
             self.cooldown = 1
 
         self.next_step_handler = None
 
+        self.logger.debug("Validating library/api version")
+        try:
+            res = requests.get(self.server_url + "/version", timeout=self.timeout)
+            res.raise_for_status()
+
+            library = self.VERSION.split(".")
+            api = res.json().split(".")
+
+            if api[0] > library[0]:
+                self.logger.error(f"Library is too outdated to run the bot. Try to run: pip install webbot={res.json()}")
+                exit(-1)
+            elif api[0] < library[0]:
+                self.logger.error(f"API version is too outdated to run the bot. Update API and run again")
+                exit(-1)
+            elif api[1] > library[1]:
+                self.logger.error(f"Library version is outdated. Some features may not be available. Update lib and run again: pip install webbot={res.json()}")
+            elif api[2] > library[2]:
+                self.logger.error(f"Library version is outdated. Some bugfix may not be available. Update lib and run again: pip install webbot={res.json()}")
+        except Timeout:
+            self.logger.error("Can't connect to the server: Timeout")
+            return
+        except RequestException as e:
+            self.logger.warning(f"API returned non-200 status code: {e}")
+            return
+
+        self.logger.debug("Validating bot token")
         try:
             res = requests.get(self.server_url + "/auth/validate-token", params={
                 "token_hash": self.token_hash,
@@ -55,8 +86,6 @@ class WebBot:
         except RequestException as e:
             self.logger.warning(f"API returned non-200 status code: {e}")
             return
-
-        # TODO: Version warnings
 
     def message_handler(self):
         def wrapper(func):
