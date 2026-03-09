@@ -126,6 +126,7 @@ class WebBot:
 
             if self.next_step_handler is not None:
                 self.next_step_handler(message)
+                self._mark_as_handled(message.id)
                 self.next_step_handler = None
                 continue
 
