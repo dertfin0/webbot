@@ -7,7 +7,7 @@ from common import database
 from routers import user_api, bot_api, auth_api
 
 app = FastAPI()
-VERSION = "0.1.1"
+VERSION = "0.2.0"
 
 app.include_router(user_api.router)
 app.include_router(bot_api.router)
