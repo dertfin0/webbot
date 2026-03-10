@@ -6,7 +6,7 @@ from typing import Callable
 import requests
 from requests import Timeout, RequestException
 
-from errors import VersionError, TokenValidationError, InitRequestError
+from .errors import VersionError, TokenValidationError, InitRequestError
 
 
 class Message:
