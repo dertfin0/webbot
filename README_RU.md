@@ -54,6 +54,7 @@ pip install webbot_lib
     ```bash
     echo "USER_PASSOWRD=ВАШ_ПАРОЛЬ" >> .env
     echo "BOT_TOKEN=ПАРОЛЬ_ДЛЯ_БОТА" >> .env
+    echo "PORT=порт_для_программы" >> .env # Необязательный параметр. По умолчанию - 8000
     ```
 5. Запустите сервер:
     ```bash

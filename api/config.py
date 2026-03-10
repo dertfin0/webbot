@@ -5,12 +5,14 @@ bot_token: str
 bot_token_hash: str
 user_password: str
 user_password_hash: str
+port: int
 
 def load():
     global bot_token
     global bot_token_hash
     global user_password
     global user_password_hash
+    global port
 
     if not dotenv.load_dotenv(".env"):
         raise ValueError(".env file not found")
@@ -24,3 +26,8 @@ def load():
     if not user_password:
         raise ValueError("USER_PASSWORD not set")
     user_password_hash = hashlib.sha256(user_password.encode("UTF-8")).hexdigest()
+
+    port = dotenv.get_key(".env", "PORT")
+    if not port:
+        print("Using default port 8000")
+        port = 8000

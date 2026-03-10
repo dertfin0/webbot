@@ -25,4 +25,4 @@ if __name__ == "__main__":
         exit(-1)
 
     asyncio.run(database.init())
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=config.port)
