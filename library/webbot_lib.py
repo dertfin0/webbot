@@ -6,6 +6,9 @@ from typing import Callable
 import requests
 from requests import Timeout, RequestException
 
+from errors import VersionError, TokenValidationError, InitRequestError
+
+
 class Message:
     id: int
     text: str
@@ -22,6 +25,14 @@ class WebBot:
     VERSION = "0.1.1"
 
     def __init__(self, server_url, token, logger: logging.Logger = None, **kwargs):
+        """
+        Initialize a WebBot instance
+        :param server_url: API-server URL. Example: http://1.2.3.4:8000
+        :param token: API-server token
+        :raise VersionError: Critical difference in version
+        :raise TokenValidationError: Token validation failed
+        :raise InitRequestError: Request error in required requests
+        """
         self.server_url = server_url
         self.token = token
         self.token_hash = hashlib.sha256(self.token.encode()).hexdigest()
@@ -54,21 +65,25 @@ class WebBot:
             api = res.json().split(".")
 
             if api[0] > library[0]:
-                self.logger.error(f"Library is too outdated to run the bot. Try to run: pip install webbot={res.json()}")
-                exit(-1)
+                message = f"Library is too outdated to run the bot. Try to run: pip install webbot={res.json()}"
+                self.logger.warning(message)
+                raise VersionError(message)
             elif api[0] < library[0]:
-                self.logger.error(f"API version is too outdated to run the bot. Update API and run again")
-                exit(-1)
+                message = f"API version is too outdated to run the bot. Update API and run again"
+                self.logger.warning(message)
+                raise VersionError(message)
             elif api[1] > library[1]:
-                self.logger.error(f"Library version is outdated. Some features may not be available. Update lib and run again: pip install webbot={res.json()}")
+                self.logger.warning(f"Library version is outdated. Some features may not be available. Update lib and run again: pip install webbot={res.json()}")
             elif api[2] > library[2]:
-                self.logger.error(f"Library version is outdated. Some bugfix may not be available. Update lib and run again: pip install webbot={res.json()}")
-        except Timeout:
-            self.logger.error("Can't connect to the server: Timeout")
-            return
+                self.logger.warning(f"Library version is outdated. Some bugfix may not be available. Update lib and run again: pip install webbot={res.json()}")
+        except Timeout as e:
+            message = "Can't connect to the server: Timeout"
+            self.logger.warning(message, exc_info=e)
+            raise InitRequestError(message) from e
         except RequestException as e:
-            self.logger.warning(f"API returned non-200 status code: {e}")
-            return
+            message = f"API returned non-200 status code: {e}"
+            self.logger.warning(message, exc_info=e)
+            raise InitRequestError(message) from e
 
         self.logger.debug("Validating bot token")
         try:
@@ -79,7 +94,7 @@ class WebBot:
 
             if not res.json()["valid"]:
                 self.logger.error("Token validation failed")
-                exit(0)
+                raise TokenValidationError("Token validation failed")
         except Timeout:
             self.logger.error("Can't connect to the server: Timeout")
             return
@@ -102,7 +117,7 @@ class WebBot:
             }, timeout=self.timeout)
             res.raise_for_status()
         except Timeout:
-            self.logger.error("Can't connect to the server: Timeout")
+            self.logger.warning("Can't connect to the server: Timeout")
             return
         except RequestException as e:
             self.logger.warning(f"API returned non-200 status code: {e}")
@@ -115,7 +130,7 @@ class WebBot:
             }, timeout=self.timeout)
             res.raise_for_status()
         except Timeout:
-            self.logger.error("Can't connect to the server: Timeout")
+            self.logger.warning("Can't connect to the server: Timeout")
             return
         except RequestException as e:
             self.logger.warning(f"API returned non-200 status code: {e}")
@@ -136,7 +151,7 @@ class WebBot:
 
     def send_message(self, text):
         if len(text) > 2048:
-            self.logger.error("Message length must be <=2048")
+            self.logger.warning("Message length must be <=2048")
             return
 
         try:
@@ -147,7 +162,7 @@ class WebBot:
             }, timeout=self.timeout)
             res.raise_for_status()
         except Timeout:
-            self.logger.error("Can't connect to the server: Timeout")
+            self.logger.warning("Can't connect to the server: Timeout")
             return
         except RequestException as e:
             self.logger.warning(f"API returned non-200 status code: {e}")
